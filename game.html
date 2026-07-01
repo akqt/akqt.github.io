@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LibraryOne Quest — The Ultimate Game</title>
+    <meta name="description" content="An epic arcade game featuring multiple modes, power-ups, and endless challenges." />
+    <style>
+        :root {
+            --bg: #07111f;
+            --panel: rgba(255,255,255,0.08);
+            --text: #f4f8ff;
+            --muted: #cdd9ea;
+            --brand: #42b7ff;
+            --brand-2: #8a5cff;
+            --accent: #18c79e;
+            --danger: #ff6b6b;
+            --warn: #ffa500;
+        }
+
+        * { box-sizing: border-box; margin: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: Inter, "Segoe UI", Roboto, sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top left, rgba(66,183,255,0.18), transparent 25%), linear-gradient(135deg, var(--bg), #0d1d2d);
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+        }
+
+        .game-container {
+            width: min(1000px, 100%);
+            background: var(--panel);
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: 32px;
+            padding: 1.8rem;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.35);
+            backdrop-filter: blur(20px);
+        }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; place-items: center; }
+        .modal.show { display: grid; }
+        .modal-inner { background: var(--panel); border: 1px solid rgba(255,255,255,0.16); border-radius: 32px; padding: 2rem; text-align: center; max-width: 500px; }
+        .modal h2 { margin-bottom: 1rem; font-size: 1.8rem; }
+        .modal p { color: var(--muted); margin-bottom: 1.2rem; }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.6rem;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 0.7rem 1.2rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 999px;
+            background: rgba(255,255,255,0.04);
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .tab-btn.active { background: linear-gradient(90deg, var(--brand), var(--brand-2)); color: white; border-color: transparent; }
+        .tab-btn:hover { border-color: rgba(255,255,255,0.2); }
+
+        .header {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap; }
+        .header h1 { font-size: 2.2rem; background: linear-gradient(90deg, var(--brand), var(--brand-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: var(--muted); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 0.8rem;
+        }
+        .stat-box {
+            padding: 0.9rem 1rem;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+        .stat-box strong { display: block; font-size: 1.45rem; }
+        .stat-box span { display: block; font-size: 0.82rem; color: var(--muted); }
+
+        .playfield {
+            position: relative;
+            width: 100%;
+            height: 450px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: linear-gradient(135deg, rgba(66,183,255,0.12), rgba(138,92,255,0.12));
+            overflow: hidden;
+            cursor: crosshair;
+            margin-bottom: 1.4rem;
+        }
+        .playfield::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
+            background-size: 16px 16px;
+            opacity: 0.25;
+            pointer-events: none;
+        }
+
+        .target {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 1.8rem;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+            box-shadow: 0 16px 32px rgba(0,0,0,0.3);
+            user-select: none;
+            cursor: pointer;
+            font-weight: 800;
+            transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: float 2s ease-in-out infinite;
+        }
+        .target:hover { transform: scale(1.15); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .target:active { transform: scale(0.88); }
+
+        .target.book { background: linear-gradient(135deg, #1e90ff, #42b7ff); }
+        .target.spark { background: linear-gradient(135deg, #18c79e, #2ecc71); }
+        .target.star { background: linear-gradient(135deg, #ffa500, #ff7d5c); }
+        .target.bonus { background: linear-gradient(135deg, #ff1493, #ff69b4); animation: pulse-target 0.6s ease-in-out infinite; }
+        .target.multiplier { background: radial-gradient(circle at 30% 30%, #ffd700, #ffaa00); }
+        .target.shield { background: linear-gradient(135deg, #00bfff, #1e90ff); }
+        .target.slowmo { background: linear-gradient(135deg, #9370db, #8a5cff); }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        button.btn {
+            border: 0;
+            border-radius: 999px;
+            padding: 0.9rem 1.4rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(90deg, var(--brand), var(--brand-2));
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        button.btn:hover { transform: translateY(-2px); }
+        button.btn:active { transform: scale(0.96); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14) !important;
+        }
+
+        .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+        .info-item { padding: 0.8rem; border-radius: 12px; background: rgba(255,255,255,0.04); }
+        .info-item strong { color: var(--text); }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.9rem 1.4rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+        .back-link:hover { background: rgba(255,255,255,0.12); }
+
+        .combo-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255,215,0,0.6);
+            pointer-events: none;
+            opacity: 0;
+            animation: combo-pop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 99;
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+        @keyframes pulse-target { 0%, 100% { box-shadow: 0 16px 32px rgba(0,0,0,0.3); } 50% { box-shadow: 0 8px 40px rgba(255,20,147,0.6); } }
+        @keyframes combo-pop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -150%) scale(1); opacity: 0; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+        .shaking { animation: shake 0.3s; }
+
+        @media (max-width: 800px) {
+            .playfield { height: 380px; }
+            .target { width: 60px; height: 60px; font-size: 1.5rem; }
+            .header h1 { font-size: 1.6rem; }
+            .info { grid-template-columns: 1fr; }
+        }
+
+        .leaderboard {
+            margin-top: 1.2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.04);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .leaderboard h3 { margin-bottom: 0.8rem; }
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.95rem;
+        }
+        .score-entry strong { color: var(--brand); }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header-top">
+            <div class="header">
+                <h1>LibraryOne Quest</h1>
+                <p>The ultimate library arcade experience</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box"><strong id="score">0</strong><span>Score</span></div>
+                <div class="stat-box"><strong id="combo">0</strong><span>Combo</span></div>
+                <div class="stat-box"><strong id="time">--</strong><span>Time</span></div>
+                <div class="stat-box"><strong id="lives">--</strong><span>Status</span></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-mode="timed">Timed Challenge</button>
+            <button class="tab-btn" data-mode="survival">Survival</button>
+            <button class="tab-btn" data-mode="endless">Endless</button>
+        </div>
+
+        <div class="playfield" id="playfield"></div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn">Start Game</button>
+            <button class="btn btn-secondary" id="pauseBtn" style="display:none;">Pause</button>
+            <button class="btn btn-secondary" id="restartBtn">Restart</button>
+            <a href="index.html" class="back-link">Back to Portfolio</a>
+        </div>
+
+        <div class="info">
+            <div class="info-item"><strong id="mode-name">Timed Challenge:</strong> <span id="mode-desc">60 seconds, collect as many items as possible. Don't miss!</span></div>
+            <div class="info-item"><strong>Power-ups:</strong> <span>Shield, Slow-Mo, and Multiplier appear randomly.</span></div>
+        </div>
+
+        <div class="leaderboard">
+            <h3>🏆 High Scores</h3>
+            <div id="leaderboard"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-inner">
+            <h2>Game Over!</h2>
+            <p id="gameOverText"></p>
+            <button class="btn" onclick="game.startNewGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const game = {
+            modes: {
+                timed: { duration: 60, desc: '60 seconds, collect as many items as possible. Don\'t miss!', spawnRate: 800 },
+                survival: { duration: Infinity, desc: 'No timer—survive as long as you can. Miss 3 items and it\'s over!', spawnRate: 700, lives: 3 },
+                endless: { duration: Infinity, desc: 'Infinite time, increasing difficulty. How high can you score?', spawnRate: 500 }
+            },
+            currentMode: 'timed',
+            state: {
+                score: 0,
+                combo: 0,
+                timeLeft: 0,
+                lives: 0,
+                active: false,
+                paused: false,
+                multiplier: 1,
+                shield: false,
+                slowMoActive: false
+            },
+            timers: { spawn: null, tick: null, powerup: null },
+
+            init() {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.switchMode(e.target.dataset.mode));
+                });
+                document.getElementById('startBtn').addEventListener('click', () => this.startNewGame());
+                document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
+                document.getElementById('restartBtn').addEventListener('click', () => this.reset());
+                this.loadLeaderboard();
+                this.updateUI();
+            },
+
+            switchMode(mode) {
+                if (this.state.active) return;
+                this.currentMode = mode;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                event.target.classList.add('active');
+                const info = this.modes[mode];
+                document.getElementById('mode-name').textContent = mode.charAt(0).toUpperCase() + mode.slice(1) + ':';
+                document.getElementById('mode-desc').textContent = info.desc;
+                this.reset();
+            },
+
+            startNewGame() {
+                document.getElementById('gameOverModal').classList.remove('show');
+                this.reset();
+                this.state.active = true;
+                const info = this.modes[this.currentMode];
+                this.state.timeLeft = info.duration;
+                this.state.lives = info.lives || Infinity;
+                document.getElementById('pauseBtn').style.display = 'block';
+                document.getElementById('startBtn').style.display = 'none';
+                this.updateUI();
+                this.spawnTarget();
+                this.timers.spawn = setInterval(() => this.spawnTarget(), info.spawnRate);
+                this.timers.tick = setInterval(() => this.tick(), 100);
+                this.timers.powerup = setInterval(() => this.spawnPowerUp(), 8000);
+            },
+
+            togglePause() {
+                this.state.paused = !this.state.paused;
+                document.getElementById('pauseBtn').textContent = this.state.paused ? 'Resume' : 'Pause';
+            },
+
+            tick() {
+                if (this.state.paused || !this.state.active) return;
+                if (this.currentMode === 'timed' && this.state.timeLeft > 0) {
+                    this.state.timeLeft = Math.max(0, this.state.timeLeft - 0.1);
+                    if (this.state.timeLeft <= 0) this.endGame();
+                }
+                this.updateUI();
+            },
+
+            spawnTarget() {
+                if (!this.state.active || this.state.paused) return;
+                const types = ['book', 'spark', 'star'];
+                const icons = ['📚', '✨', '⭐'];
+                const idx = Math.floor(Math.random() * 3);
+                const target = document.createElement('div');
+                target.className = `target ${types[idx]}`;
+                target.textContent = icons[idx];
+                const pf = document.getElementById('playfield');
+                target.style.left = Math.random() * (pf.clientWidth - 70) + 'px';
+                target.style.top = Math.random() * (pf.clientHeight - 70) + 'px';
+
+                let points = 10 * this.state.multiplier;
+                target.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.collectTarget(target, points);
+                });
+
+                pf.appendChild(target);
+                const timeout = setTimeout(() => {
+                    if (target.isConnected) {
+                        target.remove();
+                        this.missTarget();
+                    }
+                }, 1500);
+                target.dataset.timeout = timeout;
+            },
+
+            spawnPowerUp() {
+                if (!this.state.active || this.state.paused || Math.random() > 0.6) return;
+                const powerups = [
+                    { type: 'shield', icon: '🛡️', effect: () => { this.state.shield = true; setTimeout(() => { this.state.shield = false; }, 5000); } },
+                    { type: 'multiplier', icon: '✖️', effect: () => { this.state.multiplier = 2; setTimeout(() => { this.state.multiplier = 1; }, 4000); } },
+                    { type: 'slowmo', icon: '⏱️', effect: () => { this.state.slowMoActive = true; setTimeout(() => { this.state.slowMoActive = false; }, 3000); } }
+                ];
+                const pu = powerups[Math.floor(Math.random() * powerups.length)];
+                const target = document.createElement('div');
+                target.className = `target ${pu.type}`;
+                target.textContent = pu.icon;
+                const pf = document.getElementById('playfield');
+                target.style.left = Math.random() * (pf.clientWidth - 70) + 'px';
+                target.style.top = Math.random() * (pf.clientHeight - 70) + 'px';
+                target.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    pu.effect();
+                    this.createCombo('Power-Up!');
+                    target.remove();
+                });
+                pf.appendChild(target);
+                const timeout = setTimeout(() => target.isConnected && target.remove(), 3000);
+                target.dataset.timeout = timeout;
+            },
+
+            collectTarget(target, points) {
+                this.state.score += points;
+                this.state.combo += 1;
+                if (this.state.combo > 1) this.createCombo(`${this.state.combo}x Combo!`);
+                this.createParticles(target);
+                target.remove();
+                this.updateUI();
+            },
+
+            missTarget() {
+                this.state.combo = 0;
+                if (this.currentMode !== 'timed') {
+                    this.state.lives -= 1;
+                    if (this.state.lives <= 0) this.endGame();
+                    document.getElementById('playfield').classList.add('shaking');
+                    setTimeout(() => document.getElementById('playfield').classList.remove('shaking'), 300);
+                }
+                this.updateUI();
+            },
+
+            createParticles(el) {
+                for (let i = 0; i < 8; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.textContent = '✨';
+                    p.style.left = el.style.left;
+                    p.style.top = el.style.top;
+                    p.style.font = '1.2rem';
+                    document.getElementById('playfield').appendChild(p);
+                    const angle = (i / 8) * Math.PI * 2;
+                    const vx = Math.cos(angle) * 100, vy = Math.sin(angle) * 100;
+                    let x = 0, y = 0;
+                    const anim = setInterval(() => {
+                        x += vx * 0.016; y += vy * 0.016;
+                        p.style.opacity = Math.max(0, 1 - x / 200);
+                        p.style.transform = `translate(${x}px, ${y}px)`;
+                        if (p.style.opacity === '0') { p.remove(); clearInterval(anim); }
+                    }, 16);
+                }
+            },
+
+            createCombo(text) {
+                const el = document.createElement('div');
+                el.className = 'combo-text';
+                el.textContent = text;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 800);
+            },
+
+            endGame() {
+                this.state.active = false;
+                clearInterval(this.timers.spawn);
+                clearInterval(this.timers.tick);
+                clearInterval(this.timers.powerup);
+                document.getElementById('pauseBtn').style.display = 'none';
+                document.getElementById('startBtn').style.display = 'block';
+                document.getElementById('playfield').innerHTML = '';
+                this.saveScore();
+                this.loadLeaderboard();
+                document.getElementById('gameOverText').textContent = `Final Score: ${this.state.score} points! Mode: ${this.currentMode.toUpperCase()}`;
+                document.getElementById('gameOverModal').classList.add('show');
+            },
+
+            updateUI() {
+                document.getElementById('score').textContent = Math.floor(this.state.score);
+                document.getElementById('combo').textContent = this.state.combo;
+                if (this.currentMode === 'timed') {
+                    document.getElementById('time').textContent = Math.ceil(this.state.timeLeft) + 's';
+                } else {
+                    document.getElementById('time').textContent = this.state.shield ? '🛡️' : '—';
+                }
+                document.getElementById('lives').textContent = this.state.lives === Infinity ? '∞' : this.state.lives;
+            },
+
+            saveScore() {
+                let scores = JSON.parse(localStorage.getItem('libraryone_scores') || '[]');
+                scores.push({ score: Math.floor(this.state.score), mode: this.currentMode, date: new Date().toLocaleDateString() });
+                scores.sort((a, b) => b.score - a.score);
+                localStorage.setItem('libraryone_scores', JSON.stringify(scores.slice(0, 10)));
+            },
+
+            loadLeaderboard() {
+                const scores = JSON.parse(localStorage.getItem('libraryone_scores') || '[]');
+                const lb = document.getElementById('leaderboard');
+                lb.innerHTML = scores.length ? scores.map((s, i) => `<div class="score-entry"><span>#${i+1} ${s.mode}</span><strong>${s.score}</strong><span>${s.date}</span></div>`).join('') : '<div style="text-align:center;padding:1rem;color:var(--muted);">Play to set your first high score!</div>';
+            },
+
+            reset() {
+                this.state = { score: 0, combo: 0, timeLeft: 0, lives: 0, active: false, paused: false, multiplier: 1, shield: false, slowMoActive: false };
+                document.getElementById('playfield').innerHTML = '';
+                document.getElementById('pauseBtn').textContent = 'Pause';
+                this.updateUI();
+            }
+        };
+
+        game.init();
+    </script>
+</body>
+</html>

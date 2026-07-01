@@ -1,9 +1,397 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Website</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LibraryOne | Digital Services for Public Libraries</title>
+    <meta name="description" content="LibraryOne empowers public libraries with modern digital services, reading platforms, collection tools, and evidence-based content solutions." />
+    <style>
+        :root {
+            --bg: #07111f;
+            --bg-soft: #10233b;
+            --surface: rgba(255,255,255,0.08);
+            --surface-strong: rgba(255,255,255,0.14);
+            --text: #f4f8ff;
+            --muted: #cdd9ea;
+            --brand: #42b7ff;
+            --brand-2: #8a5cff;
+            --accent: #18c79e;
+            --border: rgba(255,255,255,0.16);
+            --shadow: 0 24px 60px rgba(0,0,0,0.28);
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(66,183,255,0.22), transparent 28%),
+                linear-gradient(135deg, var(--bg) 0%, #091524 100%);
+            line-height: 1.6;
+        }
+
+        img { width: 100%; display: block; }
+        a { color: inherit; text-decoration: none; }
+
+        .container {
+            width: min(1120px, calc(100% - 2rem));
+            margin: 0 auto;
+        }
+
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 1rem 0;
+            backdrop-filter: blur(12px);
+            background: rgba(7, 17, 31, 0.72);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .logo {
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-size: 0.95rem;
+        }
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: var(--muted);
+            transition: color 0.3s ease;
+        }
+        .nav-links a:hover { color: white; }
+
+        .hero {
+            min-height: 92vh;
+            display: grid;
+            align-items: center;
+            padding: 4rem 0 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, rgba(7,17,31,0.96), rgba(7,17,31,0.55));
+            z-index: 0;
+        }
+        .hero-media {
+            position: absolute;
+            inset: 0;
+            background-image: url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1600&q=80");
+            background-size: cover;
+            background-position: center;
+            transform: scale(1.03);
+        }
+        .hero .container {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 1.5rem;
+        }
+        .eyebrow {
+            display: inline-flex;
+            width: fit-content;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.14);
+            color: #dcf6ff;
+            border: 1px solid rgba(255,255,255,0.16);
+            font-size: 0.85rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .hero h1 {
+            font-size: clamp(2.4rem, 5vw, 4.2rem);
+            line-height: 1.05;
+            margin: 0;
+            max-width: 780px;
+        }
+        .hero p {
+            font-size: 1.06rem;
+            max-width: 700px;
+            color: var(--muted);
+            margin: 0;
+        }
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.6rem;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.9rem 1.2rem;
+            border-radius: 999px;
+            font-weight: 600;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary {
+            background: linear-gradient(90deg, var(--brand), var(--brand-2));
+            color: white;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: white;
+        }
+
+        section {
+            padding: 5rem 0;
+        }
+        .section-title {
+            font-size: 2rem;
+            margin: 0 0 0.75rem;
+        }
+        .section-copy {
+            color: var(--muted);
+            max-width: 740px;
+            margin: 0 0 2rem;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+        .about-card p { color: var(--muted); }
+        .stats {
+            display: grid;
+            gap: 1rem;
+        }
+        .stat {
+            padding: 1rem 1.1rem;
+            background: rgba(255,255,255,0.06);
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .stat strong {
+            display: block;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.25rem;
+        }
+        .product-card {
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(66,183,255,0.45);
+        }
+        .product-media {
+            height: 220px;
+            background-size: cover;
+            background-position: center;
+        }
+        .product-body { padding: 1.1rem 1.1rem 1.2rem; }
+        .product-body h3 { margin: 0 0 0.4rem; font-size: 1.15rem; }
+        .product-body p { color: var(--muted); margin: 0; }
+
+        .leadership-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .leader { padding: 1.15rem; }
+        .leader h3 { margin-bottom: 0.2rem; }
+        .leader span { color: var(--accent); font-size: 0.92rem; }
+
+        .cta {
+            text-align: center;
+            padding: 3.3rem 0 5rem;
+        }
+        .cta .panel {
+            background: linear-gradient(120deg, rgba(66,183,255,0.18), rgba(138,92,255,0.16));
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 860px) {
+            .about-grid, .products-grid, .leadership-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World!</h1>
+    <header class="nav">
+        <div class="container">
+            <a href="#top" class="logo">LibraryOne</a>
+            <nav class="nav-links">
+                <a href="#about">About</a>
+                <a href="#products">Products</a>
+                <a href="#leadership">Leadership</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="top">
+        <section class="hero">
+            <div class="hero-media"></div>
+            <div class="container reveal">
+                <span class="eyebrow">Independent digital services for public libraries</span>
+                <h1>Modern tools that keep libraries connected, relevant, and thriving.</h1>
+                <p>LibraryOne brings together trusted digital platforms, collection intelligence, and patron engagement tools so public libraries can deliver high-impact reading experiences and smarter service decisions.</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="#products">Explore Platform</a>
+                    <a class="btn btn-secondary" href="#about">Learn About LibraryOne</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="about">
+            <div class="container">
+                <div class="about-grid">
+                    <div class="panel about-card reveal">
+                        <h2 class="section-title">Built for continuity, innovation, and community impact</h2>
+                        <p>Officially launched in April 2026, LibraryOne was formed to preserve and advance the digital services once operated by Baker & Taylor. The company now delivers a unified ecosystem designed for public libraries that want modern access, dependable platforms, and strong patron engagement.</p>
+                        <p>From discovery and acquisition to mobile reading and data-informed collection planning, LibraryOne supports every step of the library experience.</p>
+                    </div>
+                    <div class="stats reveal">
+                        <div class="stat">
+                            <strong>April 2026</strong>
+                            Launch year of LibraryOne as an independent digital services company.
+                        </div>
+                        <div class="stat">
+                            <strong>Charlotte, NC</strong>
+                            Headquarters supporting library innovation across the country.
+                        </div>
+                        <div class="stat">
+                            <strong>5 core platforms</strong>
+                            Covering reading, metadata, analytics, and collection development.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="products">
+            <div class="container">
+                <h2 class="section-title reveal">Solutions that serve librarians and patrons alike</h2>
+                <p class="section-copy reveal">Each product in the LibraryOne portfolio is shaped to solve a distinct need, from discovery and access to data-driven decisions and community outreach.</p>
+                <div class="products-grid">
+                    <article class="panel product-card reveal">
+                        <div class="product-media" style="background-image:url('https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=900&q=80');"></div>
+                        <div class="product-body">
+                            <h3>Boundless</h3>
+                            <p>A digital reading app and library platform that gives patrons mobile and web access to eBooks, audiobooks, and digital periodicals.</p>
+                        </div>
+                    </article>
+                    <article class="panel product-card reveal">
+                        <div class="product-media" style="background-image:url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80');"></div>
+                        <div class="product-body">
+                            <h3>TitleSource360</h3>
+                            <p>A collection development and marketplace tool for discovering, evaluating, and acquiring new materials with confidence.</p>
+                        </div>
+                    </article>
+                    <article class="panel product-card reveal">
+                        <div class="product-media" style="background-image:url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=80');"></div>
+                        <div class="product-body">
+                            <h3>ePopUp Library</h3>
+                            <p>A QR-code-based access program that brings curated digital reading materials into schools, transit spaces, and community locations.</p>
+                        </div>
+                    </article>
+                    <article class="panel product-card reveal">
+                        <div class="product-media" style="background-image:url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=900&q=80');"></div>
+                        <div class="product-body">
+                            <h3>Content Café</h3>
+                            <p>A metadata enrichment tool that improves catalog discoverability and enhances results across library databases.</p>
+                        </div>
+                    </article>
+                    <article class="panel product-card reveal">
+                        <div class="product-media" style="background-image:url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80');"></div>
+                        <div class="product-body">
+                            <h3>CollectConnect</h3>
+                            <p>A backend analytics engine that helps administrators track usage and align funding decisions with evidence-based collection planning.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="leadership">
+            <div class="container">
+                <h2 class="section-title reveal">Leadership with a public-service focus</h2>
+                <p class="section-copy reveal">LibraryOne is guided by leaders committed to long-term digital continuity and innovation for libraries nationwide.</p>
+                <div class="leadership-grid">
+                    <div class="panel leader reveal">
+                        <h3>Bharat Mirgan</h3>
+                        <span>CEO</span>
+                        <p>Leading the company’s mission to provide resilient digital infrastructure and modern library experiences.</p>
+                    </div>
+                    <div class="panel leader reveal">
+                        <h3>Hari Katukota</h3>
+                        <span>Board Chair</span>
+                        <p>Guiding strategic growth with a focus on long-term value, stability, and library-centered innovation.</p>
+                    </div>
+                    <div class="panel leader reveal">
+                        <h3>Manjunath Ratakonda</h3>
+                        <span>Head of Technology</span>
+                        <p>Driving the engineering vision behind the company’s unified ecosystem of digital library tools.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="cta">
+            <div class="container">
+                <div class="panel reveal">
+                    <h2 class="section-title">Explore the future of library technology with LibraryOne</h2>
+                    <p class="section-copy" style="margin: 0 auto 1.2rem;">Visit the official site to learn more about the company’s platforms, mission, and growing portfolio.</p>
+                    <a class="btn btn-primary" href="https://www.libraryone.com/" target="_blank" rel="noopener noreferrer">Visit Official Website</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.15 });
+
+        document.querySelectorAll('.reveal').forEach((item) => observer.observe(item));
+    </script>
 </body>
 </html>
